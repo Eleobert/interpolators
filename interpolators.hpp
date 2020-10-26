@@ -1,9 +1,11 @@
+#pragma once
+
 #include <algorithm>
 #include <vector>
 #include <cassert>
-
 #include <functional>
 #include <numeric>
+#include <cmath>
 
 
 template <typename Container>
@@ -28,34 +30,40 @@ template<typename RandomAcessContainer>
 class lagrange
 {
     std::vector<double> dem;
-    const RandomAcessContainer x;
-    const RandomAcessContainer y;
+    RandomAcessContainer x;
+    RandomAcessContainer y;
+    const bool initialized = false;
 
     // function for polinomial i
     double p(double xi, size_t i);
 
 public:
-    lagrange(const RandomAcessContainer& x, const RandomAcessContainer& y): x(x), y(y)
-    {
-        assert(x.size() == y.size());
-        dem.resize(x.size());
-
-        // precompute the polinomials denominators
-        for(int i = 0; i < x.size(); i++)
-        {
-            dem[i] = 1;
-            for(int j = 0; j < x.size(); j++)
-            {
-                if(i != j)
-                {
-                    dem[i] *= x[i] - x[j];
-                }
-            }
-        }
-    }
+    lagrange(const RandomAcessContainer& x, const RandomAcessContainer& y);
+    lagrange() = default;
 
     double operator()(double x);
 };
+
+template<typename RandomAcessContainer>
+lagrange<RandomAcessContainer>::lagrange(const RandomAcessContainer& x, const RandomAcessContainer& y): x(x), y(y), 
+                                    initialized(true)
+{
+    assert(x.size() == y.size());
+    dem.resize(x.size());
+
+    // precompute the polinomials denominators
+    for(int i = 0; i < x.size(); i++)
+    {
+        dem[i] = 1;
+        for(int j = 0; j < x.size(); j++)
+        {
+            if(i != j)
+            {
+                dem[i] *= x[i] - x[j];
+            }
+        }
+    }
+}
 
 
 template<typename RandomAcessContainer>
@@ -75,6 +83,8 @@ double lagrange<RandomAcessContainer>::p(double xi, size_t i)
 template<typename RandomAcessContainer>
 double lagrange<RandomAcessContainer>::operator()(double xi)
 {
+    assert(initialized == true);
+
     auto res = 0.0;
     for(int i = 0; i < x.size(); i++)
     {
@@ -89,10 +99,12 @@ class newton
 {
     std::vector<std::vector<double>> divided_differences;
     double x0, y0, step;
+    const bool initialized = false;
 
 public:
 
     newton(double x0, double step, const RandomAcessContainer& ys);
+    newton() = default;
 
     double operator()(double x);
 };
@@ -100,7 +112,8 @@ public:
 
 template<typename RandomAcessContainer>
 newton<RandomAcessContainer>::newton(double x0, double step, const RandomAcessContainer& ys): 
-                                            step(step), x0(x0), y0(ys[0]), divided_differences(ys.size())
+                                            step(step), x0(x0), y0(ys[0]), divided_differences(ys.size()),
+                                            initialized(true)
 {
     divided_differences[0].resize(ys.size());
     std::copy(ys.begin(), ys.end(), divided_differences[0].begin());
@@ -120,6 +133,8 @@ newton<RandomAcessContainer>::newton(double x0, double step, const RandomAcessCo
 template<typename RandomAcessContainer>
 double newton<RandomAcessContainer>::operator()(double x)
 {
+    assert(initialized == true);
+
     auto res  = y0;
     auto q    = (x - x0) / step;
     auto poly = q;
