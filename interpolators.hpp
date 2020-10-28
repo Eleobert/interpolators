@@ -30,8 +30,8 @@ template<typename RandomAcessContainer>
 class lagrange
 {
     std::vector<double> dem;
-    RandomAcessContainer x;
-    RandomAcessContainer y;
+    RandomAcessContainer xs;
+    RandomAcessContainer ys;
     const bool initialized = false;
 
     // function for polinomial i
@@ -45,21 +45,21 @@ public:
 };
 
 template<typename RandomAcessContainer>
-lagrange<RandomAcessContainer>::lagrange(const RandomAcessContainer& x, const RandomAcessContainer& y): x(x), y(y), 
+lagrange<RandomAcessContainer>::lagrange(const RandomAcessContainer& xs, const RandomAcessContainer& ys): xs(xs), ys(ys), 
                                     initialized(true)
 {
-    assert(x.size() == y.size());
-    dem.resize(x.size());
+    assert(xs.size() == ys.size());
+    dem.resize(xs.size());
 
     // precompute the polinomials denominators
-    for(int i = 0; i < x.size(); i++)
+    for(int i = 0; i < xs.size(); i++)
     {
         dem[i] = 1;
-        for(int j = 0; j < x.size(); j++)
+        for(int j = 0; j < xs.size(); j++)
         {
             if(i != j)
             {
-                dem[i] *= x[i] - x[j];
+                dem[i] *= xs[i] - xs[j];
             }
         }
     }
@@ -70,14 +70,14 @@ template<typename RandomAcessContainer>
 double lagrange<RandomAcessContainer>::p(double xi, size_t i)
 {
     auto num = 1.0;
-    for(size_t j = 0; j < x.size(); j++)
+    for(size_t j = 0; j < xs.size(); j++)
     {
         if(i != j)
         {
-            num *= xi - x[j];
+            num *= xi - xs[j];
         }
     }
-    return num * y[i] / dem[i];   
+    return num * ys[i] / dem[i];   
 }
 
 template<typename RandomAcessContainer>
@@ -86,7 +86,7 @@ double lagrange<RandomAcessContainer>::operator()(double xi)
     assert(initialized == true);
 
     auto res = 0.0;
-    for(int i = 0; i < x.size(); i++)
+    for(int i = 0; i < xs.size(); i++)
     {
         res += p(xi, i);
     }
