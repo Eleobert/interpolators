@@ -38,7 +38,7 @@ class lagrange
     double p(double xi, size_t i);
 
 public:
-    lagrange(const RandomAcessContainer& x, const RandomAcessContainer& y);
+    lagrange(const RandomAcessContainer& xs, const RandomAcessContainer& ys);
     lagrange() = default;
 
     double operator()(double x);
@@ -145,4 +145,38 @@ double newton<RandomAcessContainer>::operator()(double x)
         poly *= (q - i) / (i + 1);
     }
     return res;
+}
+
+
+template<typename RandomAcessContainer>
+class linear
+{
+    RandomAcessContainer xs;
+    RandomAcessContainer ys;
+    const bool initialized = false;
+
+public:
+    linear(const RandomAcessContainer& xs, const RandomAcessContainer& ys);
+    linear() = default;
+
+    double operator()(double x);
+};
+
+
+template<typename RandomAcessContainer>
+linear<RandomAcessContainer>::linear(const RandomAcessContainer& xs, const RandomAcessContainer& ys): xs(xs), ys(ys), 
+                                    initialized(true)
+{
+    assert(xs.size() == ys.size());
+}
+
+template<typename RandomAcessContainer>
+double linear<RandomAcessContainer>::operator()(double x)
+{
+    assert(initialized == true);
+
+    auto x_high = std::upper_bound(xs.begin(), xs.end(), x);
+    assert(x_high != xs.end());
+    auto i = x_high - xs.begin() - 1u; //index of x_low
+    return ys[i] + (x - xs[i]) * (ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]);
 }
