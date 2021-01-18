@@ -25,126 +25,47 @@ auto linspace(typename Container::value_type a, typename Container::value_type b
     return res;
 }
 
-
-template<typename RandomAcessContainer>
-class lagrange
+template<typename Container>
+class poly
 {
-    std::vector<double> dem;
-    RandomAcessContainer xs;
-    RandomAcessContainer ys;
-    const bool initialized = false;
+    using type = typename Container::value_type;
+    std::vector<type> xs;
+    std::vector<type> data;
 
-    // function for polinomial i
-    double p(double xi, size_t i);
-
-public:
-    lagrange(const RandomAcessContainer& xs, const RandomAcessContainer& ys);
-    lagrange() = default;
-
-    double operator()(double x);
-};
-
-template<typename RandomAcessContainer>
-lagrange<RandomAcessContainer>::lagrange(const RandomAcessContainer& xs, const RandomAcessContainer& ys): xs(xs), ys(ys), 
-                                    initialized(true)
-{
-    assert(xs.size() == ys.size());
-    dem.resize(xs.size());
-
-    // precompute the polinomials denominators
-    for(int i = 0; i < xs.size(); i++)
-    {
-        dem[i] = 1;
-        for(int j = 0; j < xs.size(); j++)
-        {
-            if(i != j)
-            {
-                dem[i] *= xs[i] - xs[j];
-            }
-        }
-    }
-}
-
-
-template<typename RandomAcessContainer>
-double lagrange<RandomAcessContainer>::p(double xi, size_t i)
-{
-    auto num = 1.0;
-    for(size_t j = 0; j < xs.size(); j++)
-    {
-        if(i != j)
-        {
-            num *= xi - xs[j];
-        }
-    }
-    return num * ys[i] / dem[i];   
-}
-
-template<typename RandomAcessContainer>
-double lagrange<RandomAcessContainer>::operator()(double xi)
-{
-    assert(initialized == true);
-
-    auto res = 0.0;
-    for(int i = 0; i < xs.size(); i++)
-    {
-        res += p(xi, i);
-    }
-    return res;
-}
-
-
-template<typename RandomAcessContainer>
-class newton
-{
-    std::vector<std::vector<double>> divided_differences;
-    double x0, y0, step;
-    const bool initialized = false;
-
+    auto& qs(int i, int j){return data[i * xs.size() + j];}
 public:
 
-    newton(double x0, double step, const RandomAcessContainer& ys);
-    newton() = default;
+    poly(const Container& xs, const Container& ys): xs(xs), data(xs.size() * xs.size())
+    {
+        assert(xs.size() == ys.size());
+        std::copy(std::begin(xs), std::end(xs), this->xs.begin());
+        std::copy(std::begin(ys), std::end(ys), data.begin());
+    }
 
-    double operator()(double x);
-};
-
-
-template<typename RandomAcessContainer>
-newton<RandomAcessContainer>::newton(double x0, double step, const RandomAcessContainer& ys): 
-                                            step(step), x0(x0), y0(ys[0]), divided_differences(ys.size()),
-                                            initialized(true)
-{
-    divided_differences[0].resize(ys.size());
-    std::copy(ys.begin(), ys.end(), divided_differences[0].begin());
+    double neville(size_t i, size_t j, double x);
     
-    for(size_t i = 1; i < ys.size(); i++)
-    {
-        auto& pdd = divided_differences[i - 1]; // previous divided differences
-        auto& cdd = divided_differences[i];     // current  divided differences
-        
-        cdd.resize(pdd.size() - 1);
+    double operator()(double x);
+};
 
-        std::transform(std::next(pdd.begin()), pdd.end(), pdd.begin(), cdd.begin(), std::minus{});
+
+template<typename Container>
+double poly<Container>::neville(size_t i, size_t j, double x)
+{
+    for(size_t i = 1; i < xs.size(); i++)
+    {
+        for(size_t j = i; j < xs.size(); j++)
+        {
+            qs(i, j) = ((x - xs[j-i]) * qs(i-1, j) - (x - xs[j]) * qs(i-1, j-1)) / (xs[j] - xs[j-i]);
+        }
     }
+    return qs(xs.size() - 1, xs.size() - 1);
 }
 
 
-template<typename RandomAcessContainer>
-double newton<RandomAcessContainer>::operator()(double x)
+template<typename Container>
+double poly<Container>::operator()(double x)
 {
-    assert(initialized == true);
-
-    auto res  = y0;
-    auto q    = (x - x0) / step;
-    auto poly = q;
-
-    for(int i = 1; i < divided_differences.size(); i++)
-    {
-        res  += poly * divided_differences[i][0];
-        poly *= (q - i) / (i + 1);
-    }
-    return res;
+    return neville(0, xs.size() - 1, x);
 }
 
 
