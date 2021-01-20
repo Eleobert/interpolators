@@ -25,6 +25,7 @@ auto linspace(typename Container::value_type a, typename Container::value_type b
     return res;
 }
 
+
 template<typename Container>
 class poly
 {
@@ -62,8 +63,9 @@ double poly<Container>::operator()(double x)
 template<typename RandomAcessContainer>
 class linear
 {
-    RandomAcessContainer xs;
-    RandomAcessContainer ys;
+    using type = typename RandomAcessContainer::value_type;
+    std::vector<type> xs;
+    std::vector<type> ys;
     const bool initialized = false;
 
 public:
@@ -74,15 +76,18 @@ public:
 };
 
 
-template<typename RandomAcessContainer>
-linear<RandomAcessContainer>::linear(const RandomAcessContainer& xs, const RandomAcessContainer& ys): xs(xs), ys(ys), 
-                                    initialized(true)
+template<typename Container>
+linear<Container>::linear(const Container& xs, const Container& ys):
+                                    xs(xs.size()), ys(ys.size()), initialized(true)
 {
     assert(xs.size() == ys.size());
+    std::copy(std::begin(xs), std::end(xs), this->xs.begin());
+    std::copy(std::begin(ys), std::end(ys), this->ys.begin());
 }
 
-template<typename RandomAcessContainer>
-double linear<RandomAcessContainer>::operator()(double x)
+
+template<typename Container>
+double linear<Container>::operator()(double x)
 {
     assert(initialized == true);
 
