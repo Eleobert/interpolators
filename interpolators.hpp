@@ -41,15 +41,12 @@ public:
         std::copy(std::begin(xs), std::end(xs), this->xs.begin());
         std::copy(std::begin(ys), std::end(ys), data.begin());
     }
-
-    double neville(size_t i, size_t j, double x);
-    
     double operator()(double x);
 };
 
 
 template<typename Container>
-double poly<Container>::neville(size_t i, size_t j, double x)
+double poly<Container>::operator()(double x)
 {
     for(size_t i = 1; i < xs.size(); i++)
     {
@@ -59,13 +56,6 @@ double poly<Container>::neville(size_t i, size_t j, double x)
         }
     }
     return qs(xs.size() - 1, xs.size() - 1);
-}
-
-
-template<typename Container>
-double poly<Container>::operator()(double x)
-{
-    return neville(0, xs.size() - 1, x);
 }
 
 
