@@ -22,6 +22,8 @@ auto linspace(typename Container::value_type a, typename Container::value_type b
         e = val;
         val += step;
     }
+    // make the last value match b exactly
+    res[n - 1] = b;
     return res;
 }
 
