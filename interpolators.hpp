@@ -92,9 +92,20 @@ template<typename Container>
 double linear<Container>::operator()(double x)
 {
     assert(initialized == true);
+    const auto x0 = xs.front();
+    const auto xn = xs.back();
+    assert(x >= x0 && x <= xn);
 
-    auto x_high = std::upper_bound(xs.begin(), xs.end(), x);
-    assert(x_high != xs.end());
-    auto i = x_high - xs.begin() - 1u; //index of x_low
-    return ys[i] + (x - xs[i]) * (ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]);
+    const auto i = std::lower_bound(std::next(xs.begin()), xs.end(), x) - xs.begin();
+
+    if(i == 0)
+    {
+        return x;
+    }
+    const auto w = xs[i + 0] - xs[i - 1];
+    const auto t = (x - xs[i - 1]) / w;
+    const auto l = ys[i - 1];
+    const auto r = ys[i + 0];
+
+    return (1.0 - t) * l + t * r;
 }
